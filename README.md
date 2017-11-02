@@ -60,3 +60,5 @@ https://xgboost.readthedocs.io/en/latest/model.html
 
 
 b) Objective Function : Training Loss + Regularization функция потерь
+
+c) first step 
