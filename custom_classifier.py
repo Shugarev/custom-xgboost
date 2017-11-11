@@ -19,7 +19,7 @@ class CustomClassifier:
 
   def _calc_split(self, data, target):
     rv = {"obj": 1}  # Return value. результат же всегда меньше 0?
-    for factor in [x for x in data.columns if x != target]:
+    for factor in [x for x in data.columns if not x in [target, Y]]:
       values = data[factor].unique()
       for value in values:
         lo_data = data[data[factor] <= value]
@@ -27,14 +27,9 @@ class CustomClassifier:
         if hi_data.shape[0] > 0:
           obj, w_lo, w_hi = self._get_obj(self._get_g(lo_data, target), self._get_h(lo_data, target),
                               self._get_g(hi_data, target), self._get_h(hi_data, target))
-          if obj < rv['obj']:
-            rv['obj'] = obj
-            rv['factor'] = factor
-            rv['value'] = value
-            rv['lo_data'] = lo_data
-            rv['hi_data'] = hi_data
-            rv['w_lo'] = w_lo
-            rv['w_hi'] = w_hi
+          if obj < rv.get('obj'):
+            rv = {'obj': obj, 'factor': factor, 'value': value, 'lo_data': lo_data, 'hi_data': hi_data, 'w_lo': w_lo,
+                  'w_hi': w_hi }
     rv['lo_data'] = lo = rv['lo_data'].copy()
     rv['hi_data'] = hi = rv['hi_data'].copy()
     lo[Y] = rv['w_lo']
@@ -48,8 +43,10 @@ class CustomClassifier:
     node.factor, node.value, data_lo, data_hi = self._calc_split(data, target)
     print('factor=', node.factor, 'value=', node.value)
     if level < self.split_count:
-      node.lo_branch = self._get_node(data_lo, target, level=++level)
-      node.hi_branch = self._get_node(data_hi, target, level=++level)
+      if data_lo.shape[0] > 1:
+        node.lo_branch = self._get_node(data_lo, target, level=++level)
+      if data_hi.shape[0] > 1:
+        node.hi_branch = self._get_node(data_hi, target, level=++level)
     return node
 
   def _build_next_tree(self, data, target):
